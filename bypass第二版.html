@@ -1,66 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bypass API</title>
-    <style>
-        .button-group {
-            margin: 10px 0;
-            gap: 10px;
-            display: flex;
-        }
-    </style>
-</head>
-<body>
-    <h2>Bypass URL</h2>
-    <input type="text" id="urlInput" placeholder="Enter URL here">
-    <div class="button-group">
-        <button onclick="bypassUrl()">Bypass</button>
-        <button onclick="clearFields()">Clear</button>
-        <button onclick="navigateToResponse()">Go to Response</button>
-    </div>
-    <textarea id="output" rows="5" cols="50" readonly placeholder="API response will appear here..."></textarea>
+<script>
+    async function bypassUrl() {
+        const urlInput = document.getElementById('urlInput');
+        const output = document.getElementById('output');
+        const url = urlInput.value.trim();
 
-    <script>
-    function bypassUrl() {
-        const url = document.getElementById('urlInput').value;
-        if (url) {
-            const apiUrl = `https://iwoozie.baby/api/free/bypass?url=${encodeURIComponent(url)}`;
-            fetch(apiUrl)
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('output').value = data;
-                })
-                .catch(error => {
-                    document.getElementById('output').value = 'An error occurred: ' + error.message;
-                });
-        } else {
-            document.getElementById('output').value = 'Please enter a URL';
+        if (!url) {
+            alert('Please enter a URL');
+            return;
+        }
+
+        // 显示加载状态
+        output.value = "Processing...";
+
+        try {
+            // 使用CORS代理访问示例API（实际使用时需要替换为真实API）
+            const proxy = 'https://cors-anywhere.herokuapp.com/';
+            const apiUrl = `${proxy}https://your-real-bypass-api.com/bypass?url=${encodeURIComponent(url)}`;
+            
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            // 假设API返回结构 { destination: "..." }
+            if (data.destination) {
+                output.value = data.destination;
+            } else {
+                output.value = "No redirect destination found";
+            }
+        } catch (error) {
+            output.value = `Error: ${error.message}`;
         }
     }
 
-    // 新增清除功能
     function clearFields() {
         document.getElementById('urlInput').value = '';
         document.getElementById('output').value = '';
     }
 
-    // 新增跳转功能
     function navigateToResponse() {
-        const responseUrl = document.getElementById('output').value.trim();
-        if (responseUrl) {
-            try {
-                // 确保是有效的URL
-                new URL(responseUrl);
-                window.location.href = responseUrl;
-            } catch {
-                alert('Invalid URL in response');
+        const outputUrl = document.getElementById('output').value.trim();
+        
+        if (!outputUrl) {
+            alert('No URL available');
+            return;
+        }
+
+        try {
+            const validUrl = new URL(outputUrl);
+            if (validUrl.protocol === 'http:' || validUrl.protocol === 'https:') {
+                window.open(outputUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                alert('Only HTTP/HTTPS URLs are allowed');
             }
-        } else {
-            alert('Please get a response first');
+        } catch (e) {
+            alert('Invalid URL format');
         }
     }
-    </script>
-</body>
-</html>
+</script>
+
